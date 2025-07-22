@@ -1,36 +1,58 @@
 import logging
 import os
 from telegram import Update
-from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
-from dotenv import load_dotenv
+from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
+import openai
+import requests
 
-load_dotenv()
-
-TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
-
-# Set up logging
+# Enable logging
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
 )
 
-# Example /start command
+logger = logging.getLogger(__name__)
+
+# Read environment variables (tokens)
+TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN")
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
+
+# Set OpenAI key
+openai.api_key = OPENAI_API_KEY
+
+# /start command
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    await update.message.reply_text("Welcome to Advance Options GPT Bot!")
+    await update.message.reply_text("👋 Welcome to AdvanceOptionsGptBot!\n\nType /ask followed by your question or wait for breakout alerts.")
 
-# Example /ask command
+# /ask command
 async def ask(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    query = ' '.join(context.args)
-    if not query:
-        await update.message.reply_text("Please enter a query after /ask.")
+    if not context.args:
+        await update.message.reply_text("❗Please provide a question. Example: `/ask What is a breakout in options trading?`")
         return
-    # Dummy response for now
-    await update.message.reply_text(f"Received your query: {query}")
+    
+    user_question = " ".join(context.args)
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "You are an expert options trading assistant."},
+                {"role": "user", "content": user_question}
+            ]
+        )
+        reply = response.choices[0].message.content.strip()
+        await update.message.reply_text(reply)
+    except Exception as e:
+        await update.message.reply_text(f"⚠️ Error: {e}")
 
-if __name__ == '__main__':
+# Set up application and handlers
+def main():
     app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
 
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("ask", ask))
-
+    
+    # Add other command handlers for breakout alerts later
     app.run_polling()
+
+if __name__ == '__main__':
+    main()
