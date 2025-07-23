@@ -12,8 +12,8 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Read environment variables
-TELEGRAM_TOKEN = os.environ["TELEGRAM_TOKEN"]
-OPENAI_API_KEY = os.environ["OPENAI_API_KEY"]
+TELEGRAM_TOKEN = os.environ["7655727128:AAFtEO3I1fbY8bb-V4Kf7gc1Ak-bS1dvrrU"]
+OPENAI_API_KEY = os.environ["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"]
 OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-3.5-turbo")  # Default model
 
 # Initialize OpenAI client
